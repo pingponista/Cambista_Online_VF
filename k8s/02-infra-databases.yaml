@@ -1,0 +1,263 @@
+﻿# ===========================================================================
+# DATABASE-PER-SERVICE: ISOLATED POSTGRESQL INSTANCES
+# ===========================================================================
+
+# --- AUTH DATABASE ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-auth
+  namespace: cambista-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-auth
+  template:
+    metadata:
+      labels:
+        app: postgres-auth
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value:  cambista_auth_db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, postgres, -d, cambista_auth_db]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: [pg_isready, -U, postgres, -d, cambista_auth_db]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-auth-service
+  namespace: cambista-system
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres-auth
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+# --- EXCHANGE RATE DATABASE ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-rate
+  namespace: cambista-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-rate
+  template:
+    metadata:
+      labels:
+        app: postgres-rate
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: cambista_rate_db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, postgres, -d, cambista_rate_db]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: [pg_isready, -U, postgres, -d, cambista_rate_db]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-rate-service
+  namespace: cambista-system
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres-rate
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+# --- WALLET & LEDGER DATABASE ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-wallet
+  namespace: cambista-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-wallet
+  template:
+    metadata:
+      labels:
+        app: postgres-wallet
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: cambista_wallet_db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, postgres, -d, cambista_wallet_db]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: [pg_isready, -U, postgres, -d, cambista_wallet_db]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-wallet-service
+  namespace: cambista-system
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres-wallet
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+# --- TRANSACTION & ORDER DATABASE ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-transaction
+  namespace: cambista-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-transaction
+  template:
+    metadata:
+      labels:
+        app: postgres-transaction
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: cambista_transaction_db
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, postgres, -d, cambista_transaction_db]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command: [pg_isready, -U, postgres, -d, cambista_transaction_db]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-transaction-service
+  namespace: cambista-system
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres-transaction
+  ports:
+    - port: 5432
+      targetPort: 5432

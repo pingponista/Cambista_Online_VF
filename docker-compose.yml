@@ -1,0 +1,277 @@
+services:
+  # =========================================================================
+  # INFRASTRUCTURE: Apache Kafka KRaft (Zookeeper-less)
+  # =========================================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: cambista-kafka
+    ports:
+      -  9092:9092
+      - 29092:29092
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    healthcheck:
+      test: [CMD-SHELL, kafka-broker-api-versions --bootstrap-server localhost:9092]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cambista-network
+
+  # =========================================================================
+  # INFRASTRUCTURE: Redis Cache (Exchange Rates AP contingency cache)
+  # =========================================================================
+  redis:
+    image: redis:7.2-alpine
+    container_name: cambista-redis
+    ports:
+      - 6379:6379
+    command: [redis-server, --appendonly, yes]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cambista-network
+
+  # =========================================================================
+  # DATABASES: Database-per-Service (Isolated PostgreSQL Containers)
+  # =========================================================================
+  postgres-auth:
+    image: postgres:16-alpine
+    container_name: cambista-postgres-auth
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_DB: cambista_auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    volumes:
+      - pgdata_auth:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres -d cambista_auth_db]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cambista-network
+
+  postgres-rate:
+    image: postgres:16-alpine
+    container_name: cambista-postgres-rate
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_DB: cambista_rate_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    volumes:
+      - pgdata_rate:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres -d cambista_rate_db]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cambista-network
+
+  postgres-wallet:
+    image: postgres:16-alpine
+    container_name: cambista-postgres-wallet
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_DB: cambista_wallet_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    volumes:
+      - pgdata_wallet:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres -d cambista_wallet_db]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cambista-network
+
+  postgres-transaction:
+    image: postgres:16-alpine
+    container_name: cambista-postgres-transaction
+    ports:
+      - 5436:5432
+    environment:
+      POSTGRES_DB: cambista_transaction_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    volumes:
+      - pgdata_transaction:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres -d cambista_transaction_db]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cambista-network
+
+  # =========================================================================
+  # CORE MICROSERVICES
+  # =========================================================================
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: cambista-auth-service
+    ports:
+      - 8081:8081
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-auth:5432/cambista_auth_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgrespassword
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      JWT_EXPIRATION_MS: 3600000
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - cambista-network
+
+  exchange-rate-service:
+    build:
+      context: .
+      dockerfile: exchange-rate-service/Dockerfile
+    container_name: cambista-exchange-rate-service
+    ports:
+      - 8082:8082
+    environment:
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-rate:5432/cambista_rate_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgrespassword
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      postgres-rate:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cambista-network
+
+  wallet-ledger-service:
+    build:
+      context: .
+      dockerfile: wallet-ledger-service/Dockerfile
+    container_name: cambista-wallet-ledger-service
+    ports:
+      - 8083:8083
+    environment:
+      SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-wallet:5432/cambista_wallet_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgrespassword
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      postgres-wallet:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - cambista-network
+
+  transaction-service:
+    build:
+      context: .
+      dockerfile: transaction-service/Dockerfile
+    container_name: cambista-transaction-service
+    ports:
+      - 8084:8084
+    environment:
+      SERVER_PORT: 8084
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-transaction:5432/cambista_transaction_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgrespassword
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVICES_EXCHANGE_RATE_URL: http://exchange-rate-service:8082
+      SERVICES_WALLET_LEDGER_URL: http://wallet-ledger-service:8083
+    depends_on:
+      postgres-transaction:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      exchange-rate-service:
+        condition: service_started
+      wallet-ledger-service:
+        condition: service_started
+    networks:
+      - cambista-network
+
+  # =========================================================================
+  # EDGE API GATEWAY
+  # =========================================================================
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: cambista-api-gateway
+    ports:
+      - 8080:8080
+    environment:
+      SERVER_PORT: 8080
+      SERVICES_AUTH_URL: http://auth-service:8081
+      SERVICES_EXCHANGE_RATE_URL: http://exchange-rate-service:8082
+      SERVICES_WALLET_LEDGER_URL: http://wallet-ledger-service:8083
+      SERVICES_TRANSACTION_URL: http://transaction-service:8084
+    depends_on:
+      - auth-service
+      - exchange-rate-service
+      - wallet-ledger-service
+      - transaction-service
+    networks:
+      - cambista-network
+
+  # =========================================================================
+  # WEB FRONTEND (React 18 + Vite + Nginx)
+  # =========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cambista-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - cambista-network
+
+# ===========================================================================
+# NETWORKS & VOLUMES
+# ===========================================================================
+networks:
+  cambista-network:
+    driver: bridge
+
+volumes:
+  pgdata_auth:
+  pgdata_rate:
+  pgdata_wallet:
+  pgdata_transaction:

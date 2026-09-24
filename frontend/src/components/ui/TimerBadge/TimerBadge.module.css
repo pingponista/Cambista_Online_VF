@@ -1,0 +1,28 @@
+.timerContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--border-radius-pill);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: var(--font-numeric);
+}
+
+.pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fbbf24;
+  box-shadow: 0 0 8px #fbbf24;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}

@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package com.cambistaonline.grpc.wallet;
+
+option java_multiple_files = true;
+option java_package = "com.cambistaonline.grpc.wallet";
+option java_outer_classname = "WalletProto";
+
+// Servicio gRPC interno para operaciones síncronas de Billetera y Ledger
+service WalletGrpcService {
+  // Consulta rápida de saldo para validación previa a la orden
+  rpc GetBalance (GetBalanceRequest) returns (GetBalanceResponse);
+
+  // SAGA Paso 1: Bloquear saldo en moneda origen
+  rpc LockFunds (LockFundsRequest) returns (LockFundsResponse);
+
+  // SAGA Acción Compensatoria: Desbloquear saldo retenido en caso de falla o expiración
+  rpc UnlockFunds (UnlockFundsRequest) returns (UnlockFundsResponse);
+
+  // SAGA Paso Final: Liquidar operación (debitar origen retenido y acreditar destino)
+  rpc SettleFunds (SettleFundsRequest) returns (SettleFundsResponse);
+}
+
+enum CurrencyProto {
+  PEN = 0;
+  USD = 1;
+  EUR = 2;
+}
+
+message GetBalanceRequest {
+  string user_email = 1;
+  CurrencyProto currency = 2;
+}
+
+message GetBalanceResponse {
+  string user_email = 1;
+  CurrencyProto currency = 2;
+  double available_balance = 3;
+  double locked_balance = 4;
+  bool is_active = 5;
+}
+
+message LockFundsRequest {
+  string transaction_id = 1;
+  string user_email = 2;
+  CurrencyProto currency = 3;
+  double amount = 4;
+  string reason = 5;
+}
+
+message LockFundsResponse {
+  bool success = 1;
+  string transaction_id = 2;
+  string message = 3;
+  double remaining_available = 4;
+}
+
+message UnlockFundsRequest {
+  string transaction_id = 1;
+  string user_email = 2;
+  CurrencyProto currency = 3;
+  double amount = 4;
+  string compensation_reason = 5;
+}
+
+message UnlockFundsResponse {
+  bool success = 1;
+  string transaction_id = 2;
+  string message = 3;
+  double restored_available = 4;
+}
+
+message SettleFundsRequest {
+  string transaction_id = 1;
+  string user_email = 2;
+  CurrencyProto origin_currency = 3;
+  double origin_amount = 4;
+  CurrencyProto destination_currency = 5;
+  double destination_amount = 6;
+  int32 points_redeemed = 7;
+  int32 points_rewarded = 8;
+}
+
+message SettleFundsResponse {
+  bool success = 1;
+  string transaction_id = 2;
+  string message = 3;
+}

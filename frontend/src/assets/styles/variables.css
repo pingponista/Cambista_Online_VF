@@ -1,0 +1,67 @@
+:root {
+  /* Typography */
+  --font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-primary: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-numeric: 'JetBrains Mono', 'Inter', monospace;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Premium Fintech Dark Palette: Backgrounds */
+  --bg-main: #070b14;
+  --bg-dark: #070b14;
+  --bg-surface: rgba(15, 23, 42, 0.85);
+  --bg-card: #0f172a;
+  --bg-card-hover: #1e293b;
+  --bg-dark-card: #0b1120;
+  --bg-glass: rgba(11, 17, 32, 0.82);
+  --bg-glass-card: rgba(15, 23, 42, 0.72);
+
+  /* Dark Palette: Text */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --text-inverse: #050b14;
+
+  /* High-Tech Borders & Glows */
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-focus: #10b981;
+  --border-glow: rgba(16, 185, 129, 0.45);
+
+  /* Brand Colors & Accents */
+  --primary-500: #10b981;
+  --primary-600: #059669;
+  --primary-glow: rgba(16, 185, 129, 0.35);
+  --color-accent-green: #10b981;
+  --color-accent-green-hover: #34d399;
+  --color-accent-green-light: rgba(16, 185, 129, 0.15);
+
+  --color-primary: #1e293b;
+  --color-primary-hover: #334155;
+
+  --accent-blue: #38bdf8;
+  --color-accent-blue: #38bdf8;
+  --accent-purple: #a855f7;
+  --color-accent-purple: #a855f7;
+  --accent-yellow: #f59e0b;
+  --color-accent-yellow: #f59e0b;
+  --accent-red: #f43f5e;
+  --color-accent-red: #f43f5e;
+
+  /* Premium Elevation & Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 12px 36px -8px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-main: 0 24px 48px -12px rgba(0, 0, 0, 0.75);
+  --shadow-glow: 0 0 30px rgba(16, 185, 129, 0.25);
+  --shadow-glow-blue: 0 0 30px rgba(56, 189, 248, 0.2);
+
+  /* Border Radii */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 9999px;
+
+  --border-radius-sm: 8px;
+  --border-radius: 14px;
+  --border-radius-lg: 22px;
+  --border-radius-pill: 9999px;
+}

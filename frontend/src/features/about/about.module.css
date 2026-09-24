@@ -1,0 +1,96 @@
+.heroSection {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.sbsBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--color-accent-green);
+  color: var(--color-accent-green-hover);
+  padding: 0.4rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 1.2rem;
+}
+
+.heroTitle {
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #ffffff 0%, #38bdf8 50%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.heroSubtitle {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.featureCard {
+  padding: 1.8rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.featureCard:hover {
+  transform: translateY(-4px);
+}
+
+.iconCircle {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.featureCard h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.featureCard p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.contactGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.contactItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.contactItem strong {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}

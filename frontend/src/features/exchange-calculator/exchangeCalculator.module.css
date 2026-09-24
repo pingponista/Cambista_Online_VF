@@ -1,0 +1,137 @@
+.calcCard {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 2.2rem;
+  position: relative;
+}
+
+.rateHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.rateBadge {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.rateValue {
+  color: var(--primary-500);
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.toggleContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg-dark);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.toggleBtn {
+  padding: 0.75rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.toggleActive {
+  background: var(--bg-card-hover);
+  color: var(--primary-500);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.inputGroup {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s;
+}
+
+.inputGroup:focus-within {
+  border-color: var(--primary-500);
+}
+
+.inputLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.numberInput {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  width: 100%;
+  outline: none;
+}
+
+.currencySelect {
+  background: var(--bg-dark);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.swapBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--primary-500);
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: -0.5rem auto -0.5rem auto;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 0 15px var(--primary-glow);
+  transition: transform 0.2s ease;
+}
+
+.swapBtn:hover {
+  transform: rotate(180deg) scale(1.05);
+}
+
+.btnAction {
+  width: 100%;
+  padding: 1.1rem;
+  background: var(--primary-500);
+  color: #04120b;
+  font-weight: 800;
+  font-size: 1.1rem;
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
+  box-shadow: 0 10px 25px var(--primary-glow);
+  transition: all 0.2s;
+}
+
+.btnAction:hover {
+  background: var(--primary-600);
+  transform: translateY(-2px);
+}

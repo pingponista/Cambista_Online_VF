@@ -1,0 +1,67 @@
+server:
+  port: ${SERVER_PORT:8081}
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/cambista_auth_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgrespassword}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: true
+
+jwt:
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+
+oauth:
+  google:
+    client-id: ${OAUTH_GOOGLE_CLIENT_ID:google-client-id-placeholder}
+    client-secret: ${OAUTH_GOOGLE_CLIENT_SECRET:google-client-secret-placeholder}
+  github:
+    client-id: ${OAUTH_GITHUB_CLIENT_ID:github-client-id-placeholder}
+    client-secret: ${OAUTH_GITHUB_CLIENT_SECRET:github-client-secret-placeholder}
+  facebook:
+    client-id: ${OAUTH_FACEBOOK_CLIENT_ID:facebook-client-id-placeholder}
+    client-secret: ${OAUTH_FACEBOOK_CLIENT_SECRET:facebook-client-secret-placeholder}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    com.cambistaonline.auth: DEBUG

@@ -1,0 +1,119 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wallet-ledger-service
+  namespace: cambista-system
+  labels:
+    app: wallet-ledger-service
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: wallet-ledger-service
+  template:
+    metadata:
+      labels:
+        app: wallet-ledger-service
+    spec:
+      containers:
+        - name: wallet-ledger-service
+          image: cambista/wallet-ledger-service:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+              name: http
+          env:
+            - name: SERVER_PORT
+              value:  8083
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cambista-config
+                  key: WALLET_DB_URL
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_PASSWORD
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: cambista-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: JAVA_OPTS
+              value: -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 800m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8083
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8083
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wallet-ledger-service
+  namespace: cambista-system
+  labels:
+    app: wallet-ledger-service
+spec:
+  type: ClusterIP
+  selector:
+    app: wallet-ledger-service
+  ports:
+    - port: 8083
+      targetPort: 8083
+      name: http
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wallet-ledger-service-hpa
+  namespace: cambista-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: wallet-ledger-service
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

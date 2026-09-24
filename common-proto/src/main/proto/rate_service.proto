@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package com.cambistaonline.grpc.rate;
+
+option java_multiple_files = true;
+option java_package = "com.cambistaonline.grpc.rate";
+option java_outer_classname = "RateProto";
+
+// Servicio gRPC interno para cotizaciones en sub-milisegundos
+service ExchangeRateGrpcService {
+  // Obtener cotización garantizada en tiempo real con pipeline de reglas
+  rpc GetLiveRate (LiveRateRequest) returns (LiveRateResponse);
+
+  // SAGA Paso 2: Validar y congelar la tasa acordada para la orden
+  rpc ValidateRate (ValidateRateRequest) returns (ValidateRateResponse);
+}
+
+enum OperationProto {
+  COMPRA = 0;
+  VENTA = 1;
+}
+
+message LiveRateRequest {
+  string currency_origin = 1;
+  string currency_destination = 2;
+  OperationProto operation = 3;
+  string user_role = 4; // "N" o "J"
+  string user_email = 5;
+  int32 points_to_redeem = 6;
+}
+
+message LiveRateResponse {
+  string currency_origin = 1;
+  string currency_destination = 2;
+  OperationProto operation = 3;
+  double base_rate = 4;
+  double final_rate = 5;
+  int32 validity_seconds = 6;
+  string quote_id = 7;
+}
+
+message ValidateRateRequest {
+  string quote_id = 1;
+  string currency_origin = 2;
+  string currency_destination = 3;
+  double expected_rate = 4;
+  int32 points_to_redeem = 5;
+}
+
+message ValidateRateResponse {
+  bool is_valid = 1;
+  string quote_id = 2;
+  double current_rate = 3;
+  string reason = 4;
+}

@@ -1,0 +1,129 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transaction-service
+  namespace: cambista-system
+  labels:
+    app: transaction-service
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: transaction-service
+  template:
+    metadata:
+      labels:
+        app: transaction-service
+    spec:
+      containers:
+        - name: transaction-service
+          image: cambista/transaction-service:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+              name: http
+          env:
+            - name: SERVER_PORT
+              value:  8084
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cambista-config
+                  key: TRANSACTION_DB_URL
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cambista-secrets
+                  key: POSTGRES_PASSWORD
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: cambista-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: SERVICES_EXCHANGE_RATE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cambista-config
+                  key: SERVICES_EXCHANGE_RATE_URL
+            - name: SERVICES_WALLET_LEDGER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cambista-config
+                  key: SERVICES_WALLET_LEDGER_URL
+            - name: JAVA_OPTS
+              value: -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 800m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8084
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8084
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transaction-service
+  namespace: cambista-system
+  labels:
+    app: transaction-service
+spec:
+  type: ClusterIP
+  selector:
+    app: transaction-service
+  ports:
+    - port: 8084
+      targetPort: 8084
+      name: http
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: transaction-service-hpa
+  namespace: cambista-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: transaction-service
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

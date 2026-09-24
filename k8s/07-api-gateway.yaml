@@ -1,0 +1,120 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: cambista-system
+  labels:
+    app: api-gateway
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: cambista/api-gateway:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: SERVER_PORT
+              value:  8080
+            - name: SERVICES_AUTH_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cambista-config
+                  key: SERVICES_AUTH_URL
+            - name: SERVICES_EXCHANGE_RATE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cambista-config
+                  key: SERVICES_EXCHANGE_RATE_URL
+            - name: SERVICES_WALLET_LEDGER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cambista-config
+                  key: SERVICES_WALLET_LEDGER_URL
+            - name: SERVICES_TRANSACTION_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: cambista-config
+                  key: SERVICES_TRANSACTION_URL
+            - name: JAVA_OPTS
+              value: -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError
+          resources:
+            requests:
+              cpu: 150m
+              memory: 384Mi
+            limits:
+              cpu: 800m
+              memory: 768Mi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: cambista-system
+  labels:
+    app: api-gateway
+spec:
+  type: NodePort # o LoadBalancer en cloud (AWS EKS, GCP GKE)
+  selector:
+    app: api-gateway
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+      name: http
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: api-gateway-hpa
+  namespace: cambista-system
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: api-gateway
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75

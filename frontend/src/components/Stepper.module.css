@@ -1,0 +1,52 @@
+.stepperContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  width: 100%;
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  opacity: 0.4;
+  transition: all 0.3s ease;
+}
+
+.stepActive {
+  opacity: 1;
+}
+
+.stepNumber {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.stepActive .stepNumber {
+  background: var(--primary-500);
+  color: #000;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.stepLabel {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.stepDivider {
+  height: 2px;
+  width: 50px;
+  background: var(--border-color);
+}

@@ -1,0 +1,27 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--border-radius-pill);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.savings {
+  background: var(--color-accent-green-light);
+  color: var(--color-accent-green-hover);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--color-accent-yellow);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.info {
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--color-accent-blue);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}

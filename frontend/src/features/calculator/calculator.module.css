@@ -1,0 +1,281 @@
+.calculatorCard {
+  max-width: 900px;
+  margin: 0 auto;
+  transition: all 0.3s ease;
+}
+
+.calculatorGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.calcLeftCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.calcRightCol {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Media Query for Tablets and Computers (Horizontal Layout) */
+@media (min-width: 768px) {
+  .calculatorGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+}
+
+.rateHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.liveRateBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-main);
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--border-radius-pill);
+  border: 1px solid var(--border-color);
+}
+
+.pulseDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent-green);
+  box-shadow: 0 0 10px var(--color-accent-green);
+  animation: pulseGreen 1.5s infinite;
+}
+
+@keyframes pulseGreen {
+  0% { transform: scale(0.95); opacity: 1; }
+  50% { transform: scale(1.25); opacity: 0.5; }
+  100% { transform: scale(0.95); opacity: 1; }
+}
+
+.operationTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--bg-main);
+  padding: 4px;
+  border-radius: var(--border-radius);
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.tabBtn {
+  padding: 0.85rem;
+  border-radius: var(--border-radius-sm);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  background: transparent;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.tabActive {
+  background: var(--bg-surface);
+  color: var(--color-accent-green);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+}
+
+.inputCard {
+  background: var(--bg-dark-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1rem 1.2rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 0.2s ease;
+}
+
+.inputCard:focus-within {
+  border-color: var(--color-accent-green);
+}
+
+.inputLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.amountInput {
+  background: transparent;
+  border: none;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--text-main);
+  width: 100%;
+  outline: none;
+  font-family: var(--font-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
+.swapContainer {
+  display: flex;
+  justify-content: center;
+  margin: -0.6rem 0;
+  position: relative;
+  z-index: 10;
+}
+
+.swapBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-card-hover);
+  color: var(--color-accent-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.swapBtn:hover {
+  background: var(--color-accent-green);
+  color: #03150c;
+  border-color: var(--color-accent-green);
+  transform: rotate(180deg) scale(1.05);
+  box-shadow: 0 0 16px var(--primary-glow);
+}
+
+.savingsWrapper {
+  margin: 1.2rem 0;
+  text-align: center;
+}
+
+/* Promo Banner */
+.promoBanner {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius);
+  font-size: 0.88rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+
+/* CambiPuntos Section */
+.pointsCard {
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  color: #c4b5fd;
+  border-radius: var(--border-radius);
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+}
+
+.pointsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.8rem;
+  color: #e9d5ff;
+}
+
+.pointsSlider {
+  width: 100%;
+  accent-color: #a78bfa;
+  cursor: pointer;
+  margin-bottom: 0.6rem;
+}
+
+.pointsFooter {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: #c4b5fd;
+  font-weight: 600;
+}
+
+/* Rate Breakdown Section */
+.breakdownToggle {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  padding: 0.4rem 0;
+  margin-bottom: 0.4rem;
+  width: 100%;
+  text-align: left;
+}
+
+.breakdownBox {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+  font-family: var(--font-numeric);
+}
+
+.breakdownRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  padding: 0.35rem 0;
+}
+
+.breakdownDivider {
+  border-top: 1px solid var(--border-color);
+  margin: 0.6rem 0;
+}
+
+.breakdownTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-main);
+  padding-top: 0.2rem;
+}
+
+.pointsEarnNotice {
+  text-align: center;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-top: 1rem;
+}
+
+.pointsEarnNotice strong {
+  color: var(--color-accent-green-hover);
+  font-weight: 800;
+}

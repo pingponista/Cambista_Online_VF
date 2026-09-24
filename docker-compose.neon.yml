@@ -1,0 +1,173 @@
+services:
+  # =========================================================================
+  # INFRASTRUCTURE: Apache Kafka KRaft & Redis Cache
+  # (Bases de datos alojadas en Neon Serverless PostgreSQL)
+  # =========================================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: cambista-kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+    healthcheck:
+      test: [CMD-SHELL, kafka-broker-api-versions --bootstrap-server localhost:9092]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cambista-network
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: cambista-redis
+    ports:
+      - "6379:6379"
+    command: [redis-server, --appendonly, yes]
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cambista-network
+
+  # =========================================================================
+  # CORE MICROSERVICES CONECTADOS A NEON SERVERLESS
+  # =========================================================================
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: cambista-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_AUTH_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-3600000}
+      OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-placeholder}
+      OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET:-placeholder}
+      OAUTH_GITHUB_CLIENT_ID: ${OAUTH_GITHUB_CLIENT_ID:-placeholder}
+      OAUTH_GITHUB_CLIENT_SECRET: ${OAUTH_GITHUB_CLIENT_SECRET:-placeholder}
+      OAUTH_FACEBOOK_CLIENT_ID: ${OAUTH_FACEBOOK_CLIENT_ID:-placeholder}
+      OAUTH_FACEBOOK_CLIENT_SECRET: ${OAUTH_FACEBOOK_CLIENT_SECRET:-placeholder}
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - cambista-network
+
+  exchange-rate-service:
+    build:
+      context: .
+      dockerfile: exchange-rate-service/Dockerfile
+    container_name: cambista-exchange-rate-service
+    ports:
+      - "8082:8082"
+    environment:
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_RATE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cambista-network
+
+  wallet-ledger-service:
+    build:
+      context: .
+      dockerfile: wallet-ledger-service/Dockerfile
+    container_name: cambista-wallet-ledger-service
+    ports:
+      - "8083:8083"
+    environment:
+      SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_WALLET_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - cambista-network
+
+  transaction-service:
+    build:
+      context: .
+      dockerfile: transaction-service/Dockerfile
+    container_name: cambista-transaction-service
+    ports:
+      - "8084:8084"
+    environment:
+      SERVER_PORT: 8084
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_TRX_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVICES_EXCHANGE_RATE_URL: http://exchange-rate-service:8082
+      SERVICES_WALLET_LEDGER_URL: http://wallet-ledger-service:8083
+    depends_on:
+      kafka:
+        condition: service_healthy
+      exchange-rate-service:
+        condition: service_started
+      wallet-ledger-service:
+        condition: service_started
+    networks:
+      - cambista-network
+
+  # =========================================================================
+  # EDGE API GATEWAY
+  # =========================================================================
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: cambista-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_PORT: 8080
+      SERVICES_AUTH_URL: http://auth-service:8081
+      SERVICES_EXCHANGE_RATE_URL: http://exchange-rate-service:8082
+      SERVICES_WALLET_LEDGER_URL: http://wallet-ledger-service:8083
+      SERVICES_TRANSACTION_URL: http://transaction-service:8084
+      JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    depends_on:
+      - auth-service
+      - exchange-rate-service
+      - wallet-ledger-service
+      - transaction-service
+    networks:
+      - cambista-network
+
+networks:
+  cambista-network:
+    driver: bridge
