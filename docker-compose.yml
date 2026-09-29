@@ -286,7 +286,9 @@ services:
       - "4317:4317"
       - "4318:4318"
     networks:
-      - cambista-network
+      cambista-network:
+        aliases:
+          - tempo
 
   grafana:
     image: grafana/grafana:11.1.0
