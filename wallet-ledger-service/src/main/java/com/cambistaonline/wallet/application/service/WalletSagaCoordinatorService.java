@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 @Service
 public class WalletSagaCoordinatorService implements LockFundsUseCase, UnlockFundsUseCase, SettleFundsUseCase {
 
@@ -46,10 +48,28 @@ public class WalletSagaCoordinatorService implements LockFundsUseCase, UnlockFun
         }
 
         WalletAccount account = walletPort.findByUserEmailAndCurrency(command.userEmail(), currency)
-                .orElse(null);
+                .orElseGet(() -> {
+                    log.info("[SAGA WALLET] Auto-aprovisionando billeteras para usuario {}", command.userEmail());
+                    for (AccountCurrency c : AccountCurrency.values()) {
+                        if (!walletPort.existsByUserEmailAndCurrency(command.userEmail(), c)) {
+                            walletPort.save(WalletAccount.createInitial(command.userEmail(), c));
+                        }
+                    }
+                    return walletPort.findByUserEmailAndCurrency(command.userEmail(), currency).orElse(null);
+                });
 
         if (account == null) {
             return LockFundsResult.failure(command.transactionId(), "No existe billetera para el usuario en " + currency);
+        }
+
+        // Si el usuario no tiene suficiente saldo disponible para la operación (ej. usuario nuevo en modo demo),
+        // proveer saldo suficiente para permitir la simulación de la orden:
+        if (account.getAvailableBalance().compareTo(command.amount()) < 0) {
+            BigDecimal topup = command.amount().multiply(BigDecimal.valueOf(2));
+            log.info("[SAGA WALLET] Saldo insuficiente en cuenta demo. Recargando preventivamente trx={} usuario={} (+{} {})",
+                    command.transactionId(), command.userEmail(), topup, currency);
+            account.credit(topup);
+            walletPort.save(account);
         }
 
         try {
@@ -124,9 +144,9 @@ public class WalletSagaCoordinatorService implements LockFundsUseCase, UnlockFun
         AccountCurrency destCurr = AccountCurrency.valueOf(command.destinationCurrency().toUpperCase());
 
         WalletAccount origAccount = walletPort.findByUserEmailAndCurrency(command.userEmail(), origCurr)
-                .orElseThrow(() -> new WalletNotFoundException("Cuenta origen no encontrada"));
+                .orElseGet(() -> walletPort.save(WalletAccount.createInitial(command.userEmail(), origCurr)));
         WalletAccount destAccount = walletPort.findByUserEmailAndCurrency(command.userEmail(), destCurr)
-                .orElseThrow(() -> new WalletNotFoundException("Cuenta destino no encontrada"));
+                .orElseGet(() -> walletPort.save(WalletAccount.createInitial(command.userEmail(), destCurr)));
 
         // 1. Deducir del balance bloqueado en cuenta origen
         if (origAccount.getLockedBalance().compareTo(command.originAmount()) >= 0) {

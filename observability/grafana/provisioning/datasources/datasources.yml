@@ -23,6 +23,8 @@ datasources:
     editable: true
     jsonData:
       httpMethod: GET
+      search:
+        hide: false
       serviceMap:
         datasourceUid: prometheus
       tracesToMetrics:
