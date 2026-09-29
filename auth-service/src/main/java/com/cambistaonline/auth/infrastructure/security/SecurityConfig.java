@@ -41,6 +41,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/oauth/**",
                                 "/api/v1/auth/mfa/verify",
                                 "/actuator/**",
+                                "/metrics",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"

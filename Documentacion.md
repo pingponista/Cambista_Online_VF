@@ -133,6 +133,9 @@ flowchart TB
 | **`transaction-service`** | Microservicio | `8084` | Orquestador SAGA de órdenes de cambio |
 | **`kafka`** | Broker Eventos | `9092` / `29092` | Apache Kafka KRaft (Zookeeper-less) |
 | **`redis`** | In-Memory Cache | `6379` | Caché de contingencia de cotizaciones |
+| **`prometheus`** | Monitoreo | `9090` | Servidor de métricas y scraping en `/metrics` |
+| **`tempo`** | Tracing OTel | `3200` / `4318` | Receptor y almacén de trazas distribuidas OpenTelemetry |
+| **`grafana`** | Visualización | `3001` | Dashboards interactivos y correlación métricas-trazas |
 | **`postgres-auth`** | Base de Datos | `5433` | PostgreSQL local para auth-service |
 | **`postgres-rate`** | Base de Datos | `5434` | PostgreSQL local para exchange-rate-service |
 | **`postgres-wallet`** | Base de Datos | `5435` | PostgreSQL local para wallet-ledger-service |
@@ -140,12 +143,88 @@ flowchart TB
 
 ---
 
-## 5. Guía de Ejecución Rápida en Local
+## 5. Arquitectura de Observabilidad Centralizada
 
-### Levantar Infraestructura Completa con Docker:
-```powershell
-docker compose up -d
+El ecosistema incorpora observabilidad de grado de producción desacoplada y centralizada:
+
+```mermaid
+flowchart LR
+    subgraph Microservices["5 Microservicios Instrumentados"]
+        GW["api-gateway"]
+        AUTH["auth-service"]
+        RATE["exchange-rate-service"]
+        WALLET["wallet-ledger-service"]
+        TRX["transaction-service"]
+    end
+
+    subgraph ObservabilityLayer["Plataforma de Observabilidad"]
+        PROM["Prometheus (:9090)\nScrape: /actuator/prometheus & /metrics"]
+        TEMPO["Grafana Tempo (:3200, :4318)\nReceptor OTLP de Trazas"]
+        GRAFANA["Grafana Dashboards (:3001)\nVisualización Unificada"]
+    end
+
+    GW -->|Scrape 5s| PROM
+    AUTH -->|Scrape 5s| PROM
+    RATE -->|Scrape 5s| PROM
+    WALLET -->|Scrape 5s| PROM
+    TRX -->|Scrape 5s| PROM
+
+    GW -.->|OTLP Spans :4318| TEMPO
+    AUTH -.->|OTLP Spans :4318| TEMPO
+    RATE -.->|OTLP Spans :4318| TEMPO
+    WALLET -.->|OTLP Spans :4318| TEMPO
+    TRX -.->|OTLP Spans :4318| TEMPO
+
+    PROM -->|Métricas| GRAFANA
+    TEMPO -->|Trazas| GRAFANA
+    GRAFANA -.->|Correlación Bidireccional Exemplars| GRAFANA
 ```
+
+### 5.1. Métricas con Prometheus
+- Cada microservicio cuenta con su propio módulo de métricas (`micrometer-registry-prometheus`), exponiendo endpoints en:
+  - `/actuator/prometheus` (Estándar Spring Boot Actuator)
+  - `/metrics` (Endpoint nativo compatible con scrapers convencionales)
+- Prometheus recolecta cada 5 segundos:
+  - **Latencia Percentiles:** Histogramas de petición `http_server_requests_seconds_bucket` para calcular percentiles exactos **p95** y **p99**.
+  - **Throughput:** Tasa de solicitudes por segundo (RPS) `rate(http_server_requests_seconds_count[1m])`.
+  - **Tasa de Errores:** Filtro por códigos de estado `status=~"[45].."` y cálculo porcentual sobre el tráfico total.
+
+### 5.2. Trazabilidad Distribuida con OpenTelemetry
+- Cada microservicio instrumenta **Micrometer Tracing Bridge OTel** con exportador **OTLP (`opentelemetry-exporter-otlp`)**.
+- Los spans de cada petición viajan hacia **Grafana Tempo** por HTTP OTLP en el puerto `4318`.
+- Los logs de cada microservicio en `logback-spring.xml` inyectan automáticamente el `traceId` y `spanId`, permitiendo cruzar logs con el visor de trazas.
+
+### 5.3. Dashboard en Grafana (`http://localhost:3001`)
+- **Acceso:** Usuario `admin`, Contraseña `admin`.
+- **Dashboard Pre-aprovisionado:** *"Cambista Online - Observabilidad de 5 Microservicios"*.
+- **Paneles Incluidos:**
+  1. **Disponibilidad (Health Check):** Estado UP/DOWN en tiempo real de los 5 servicios.
+  2. **Latencia p95 y p99:** Gráfica comparativa temporal en milisegundos para detectar degradaciones o cuellos de botella.
+  3. **Throughput (RPS):** Peticiones por segundo procesadas por cada componente.
+  4. **Tasa de Errores (4xx y 5xx):** Desglose de fallos por servicio y porcentaje relativo de error.
+  5. **Explorador de Trazas Tempo:** Visualización del árbol de llamadas distribuidas (`api-gateway` $\rightarrow$ `transaction-service` $\rightarrow$ `wallet-ledger-service`).
+  6. **Correlación Métrica-Traza:** Al observar un pico de latencia o error, la configuración de *Exemplars* enlaza directamente al span exacto en Tempo.
+
+---
+
+## 6. Guía de Ejecución Rápida en Local
+
+### Levantar Infraestructura y Observabilidad con Docker:
+```powershell
+docker compose -f docker-compose.neon.yml up -d
+```
+*(O `docker compose up -d` si usas PostgreSQL 100% local).*
+
+### Acceso a las Interfaces de Monitoreo:
+- **Grafana Dashboards:** `http://localhost:3001` (admin / admin)
+- **Prometheus UI:** `http://localhost:9090`
+- **Tempo UI:** Integrado directamente en Grafana (pestaña *Explore* $\rightarrow$ *Tempo*)
+- **Endpoints de Métricas:**
+  - Gateway: `http://localhost:8080/metrics`
+  - Auth: `http://localhost:8081/metrics`
+  - Rates: `http://localhost:8082/metrics`
+  - Wallet: `http://localhost:8083/metrics`
+  - Transaction: `http://localhost:8084/metrics`
 
 ### Iniciar el Frontend en Desarrollo:
 ```powershell

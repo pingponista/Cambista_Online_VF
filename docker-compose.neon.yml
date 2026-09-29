@@ -70,6 +70,8 @@ services:
       OAUTH_GITHUB_CLIENT_SECRET: ${OAUTH_GITHUB_CLIENT_SECRET:-placeholder}
       OAUTH_FACEBOOK_CLIENT_ID: ${OAUTH_FACEBOOK_CLIENT_ID:-placeholder}
       OAUTH_FACEBOOK_CLIENT_SECRET: ${OAUTH_FACEBOOK_CLIENT_SECRET:-placeholder}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318/v1/traces
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
     depends_on:
       kafka:
         condition: service_healthy
@@ -91,6 +93,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318/v1/traces
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
     depends_on:
       kafka:
         condition: service_healthy
@@ -112,6 +116,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318/v1/traces
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
     depends_on:
       kafka:
         condition: service_healthy
@@ -133,6 +139,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVICES_EXCHANGE_RATE_URL: http://exchange-rate-service:8082
       SERVICES_WALLET_LEDGER_URL: http://wallet-ledger-service:8083
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318/v1/traces
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
     depends_on:
       kafka:
         condition: service_healthy
@@ -160,11 +168,61 @@ services:
       SERVICES_WALLET_LEDGER_URL: http://wallet-ledger-service:8083
       SERVICES_TRANSACTION_URL: http://transaction-service:8084
       JWT_SECRET: ${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4318/v1/traces
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: "1.0"
     depends_on:
       - auth-service
       - exchange-rate-service
       - wallet-ledger-service
       - transaction-service
+    networks:
+      - cambista-network
+
+  # =========================================================================
+  # OBSERVABILITY STACK: PROMETHEUS, GRAFANA TEMPO & GRAFANA DASHBOARDS
+  # =========================================================================
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: cambista-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    networks:
+      - cambista-network
+
+  tempo:
+    image: grafana/tempo:2.5.0
+    container_name: cambista-tempo
+    command: [ "-config.file=/etc/tempo/tempo.yml" ]
+    volumes:
+      - ./observability/tempo/tempo.yml:/etc/tempo/tempo.yml:ro
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - cambista-network
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: cambista-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+      - tempo
     networks:
       - cambista-network
 
