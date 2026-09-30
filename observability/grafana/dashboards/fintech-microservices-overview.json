@@ -302,7 +302,7 @@
       "targets": [
         {
           "datasource": { "type": "tempo", "uid": "tempo" },
-          "query": "${traceId:63445edc67215a52105260c6c0bd16bb}",
+          "query": "${traceId:07533b4d3371fcf6b7d4a608efaa12ca}",
           "queryType": "traceId",
           "refId": "A"
         }
@@ -317,16 +317,15 @@
   "templating": {
     "list": [
       {
-        "current": { "selected": true, "text": "63445edc67215a52105260c6c0bd16bb", "value": "63445edc67215a52105260c6c0bd16bb" },
-        "defaultValue": "63445edc67215a52105260c6c0bd16bb",
+        "current": { "selected": true, "text": "07533b4d3371fcf6b7d4a608efaa12ca", "value": "07533b4d3371fcf6b7d4a608efaa12ca" },
+        "defaultValue": "07533b4d3371fcf6b7d4a608efaa12ca",
         "hide": 0,
         "label": "Trace ID a Inspeccionar",
         "name": "traceId",
         "options": [
-          { "selected": true, "text": "63445edc67215a52105260c6c0bd16bb (SAGA Orden TRX Multi-Servicio)", "value": "63445edc67215a52105260c6c0bd16bb" },
-          { "selected": false, "text": "c5612955d1a885b1517d6d6142058566 (Validación SBS y Cotización)", "value": "c5612955d1a885b1517d6d6142058566" }
+          { "selected": true, "text": "07533b4d3371fcf6b7d4a608efaa12ca (SAGA Orden TRX Multi-Servicio)", "value": "07533b4d3371fcf6b7d4a608efaa12ca" }
         ],
-        "query": "63445edc67215a52105260c6c0bd16bb",
+        "query": "07533b4d3371fcf6b7d4a608efaa12ca",
         "skipUrlSync": false,
         "type": "textbox"
       }
