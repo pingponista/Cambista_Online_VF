@@ -302,7 +302,7 @@
       "targets": [
         {
           "datasource": { "type": "tempo", "uid": "tempo" },
-          "query": "${traceId:07533b4d3371fcf6b7d4a608efaa12ca}",
+          "query": "${traceId}",
           "queryType": "traceId",
           "refId": "A"
         }
@@ -336,5 +336,5 @@
   "timezone": "browser",
   "title": "Cambista Online - Observabilidad de 5 Microservicios",
   "uid": "cambista-fintech-observability",
-  "version": 4
+  "version": 5
 }
