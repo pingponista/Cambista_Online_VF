@@ -288,7 +288,7 @@
       "gridPos": { "h": 6, "w": 24, "x": 0, "y": 32 },
       "id": 8,
       "options": {
-        "content": "### 🧭 Trazabilidad Distribuida de Extremo a Extremo (OpenTelemetry + Grafana Tempo)\n\nCada petición que ingresa por el **API Gateway** o los microservicios genera spans distribuidos interconectados.\n\n* **🚀 Explorar Trazas en Vivo por Servicio (1 Clic en Tempo Explore):**\n  * 🌐 [Buscar Trazas de **API Gateway**](/explore?left=%7B%22datasource%22:%22tempo%22,%22queries%22:%5B%7B%22queryType%22:%22search%22,%22serviceName%22:%22api-gateway%22%7D%5D%7D)\n  * 📝 [Buscar Trazas de **Transaction Service**](/explore?left=%7B%22datasource%22:%22tempo%22,%22queries%22:%5B%7B%22queryType%22:%22search%22,%22serviceName%22:%22transaction-service%22%7D%5D%7D)\n  * 🔐 [Buscar Trazas de **Auth Service**](/explore?left=%7B%22datasource%22:%22tempo%22,%22queries%22:%5B%7B%22queryType%22:%22search%22,%22serviceName%22:%22auth-service%22%7D%5D%7D)\n  * 💼 [Buscar Trazas de **Wallet Ledger Service**](/explore?left=%7B%22datasource%22:%22tempo%22,%22queries%22:%5B%7B%22queryType%22:%22search%22,%22serviceName%22:%22wallet-ledger-service%22%7D%5D%7D)\n  * 💱 [Buscar Trazas de **Exchange Rate Service**](/explore?left=%7B%22datasource%22:%22tempo%22,%22queries%22:%5B%7B%22queryType%22:%22search%22,%22serviceName%22:%22exchange-rate-service%22%7D%5D%7D)\n\n* **💡 Visor de Cascada Interactivo abajo:** Muestra el flujo jerárquico de la traza cargada (puedes cambiar el ID en el campo `Trace ID a Inspeccionar` en la barra superior).",
+        "content": "### 🧭 Trazabilidad Distribuida de Extremo a Extremo (OpenTelemetry + Grafana Tempo)\n\nCada petición que ingresa por el **API Gateway** o los microservicios genera spans distribuidos interconectados.\n\n* **🚀 Ver Cascada de la Transacción SAGA en Vivo:**\n  * ⚡ [**👉 Clic aquí para Abrir Diagrama Waterfall Completo de la Orden SAGA en Tempo Explore**](/explore?left=%7B%22datasource%22:%22tempo%22,%22queries%22:%5B%7B%22queryType%22:%22traceId%22,%22query%22:%22ba61d472bba1cecfc1a1ac7ab0e16510%22%7D%5D%7D)\n\n* **🔍 Explorar Trazas en Vivo por Servicio (1 Clic):**\n  * 🌐 [Buscar Trazas de **API Gateway**](/explore?left=%7B%22datasource%22:%22tempo%22,%22queries%22:%5B%7B%22queryType%22:%22search%22,%22serviceName%22:%22api-gateway%22%7D%5D%7D)\n  * 📝 [Buscar Trazas de **Transaction Service**](/explore?left=%7B%22datasource%22:%22tempo%22,%22queries%22:%5B%7B%22queryType%22:%22search%22,%22serviceName%22:%22transaction-service%22%7D%5D%7D)\n  * 🔐 [Buscar Trazas de **Auth Service**](/explore?left=%7B%22datasource%22:%22tempo%22,%22queries%22:%5B%7B%22queryType%22:%22search%22,%22serviceName%22:%22auth-service%22%7D%5D%7D)\n  * 💼 [Buscar Trazas de **Wallet Ledger Service**](/explore?left=%7B%22datasource%22:%22tempo%22,%22queries%22:%5B%7B%22queryType%22:%22search%22,%22serviceName%22:%22wallet-ledger-service%22%7D%5D%7D)\n  * 💱 [Buscar Trazas de **Exchange Rate Service**](/explore?left=%7B%22datasource%22:%22tempo%22,%22queries%22:%5B%7B%22queryType%22:%22search%22,%22serviceName%22:%22exchange-rate-service%22%7D%5D%7D)",
         "mode": "markdown"
       },
       "title": "Centro de Navegación de Trazas (Tempo)",
@@ -302,7 +302,7 @@
       "targets": [
         {
           "datasource": { "type": "tempo", "uid": "tempo" },
-          "query": "${traceId}",
+          "query": "ba61d472bba1cecfc1a1ac7ab0e16510",
           "queryType": "traceId",
           "refId": "A"
         }
@@ -317,15 +317,15 @@
   "templating": {
     "list": [
       {
-        "current": { "selected": true, "text": "07533b4d3371fcf6b7d4a608efaa12ca", "value": "07533b4d3371fcf6b7d4a608efaa12ca" },
-        "defaultValue": "07533b4d3371fcf6b7d4a608efaa12ca",
+        "current": { "selected": true, "text": "ba61d472bba1cecfc1a1ac7ab0e16510", "value": "ba61d472bba1cecfc1a1ac7ab0e16510" },
+        "defaultValue": "ba61d472bba1cecfc1a1ac7ab0e16510",
         "hide": 0,
         "label": "Trace ID a Inspeccionar",
         "name": "traceId",
         "options": [
-          { "selected": true, "text": "07533b4d3371fcf6b7d4a608efaa12ca (SAGA Orden TRX Multi-Servicio)", "value": "07533b4d3371fcf6b7d4a608efaa12ca" }
+          { "selected": true, "text": "ba61d472bba1cecfc1a1ac7ab0e16510 (SAGA Orden TRX Multi-Servicio)", "value": "ba61d472bba1cecfc1a1ac7ab0e16510" }
         ],
-        "query": "07533b4d3371fcf6b7d4a608efaa12ca",
+        "query": "ba61d472bba1cecfc1a1ac7ab0e16510",
         "skipUrlSync": false,
         "type": "textbox"
       }
@@ -336,5 +336,5 @@
   "timezone": "browser",
   "title": "Cambista Online - Observabilidad de 5 Microservicios",
   "uid": "cambista-fintech-observability",
-  "version": 5
+  "version": 6
 }
